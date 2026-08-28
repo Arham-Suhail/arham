@@ -346,6 +346,7 @@ function Contact() {
   }, []);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const pageclipReady = useRef(false);
 
   useEffect(() => {
     const formEl = formRef.current;
@@ -372,12 +373,22 @@ function Contact() {
           }
         },
       });
+      pageclipReady.current = true;
     };
 
     init();
     return () => { cancelled = true; };
   }, []);
 
+  const guardSubmit = (event: FormEvent<HTMLFormElement>) => {
+    // Always block native navigation. If Pageclip hasn't attached yet,
+    // its own listener won't fire, so we warn instead of letting the
+    // browser navigate away to the Pageclip URL.
+    if (!pageclipReady.current) {
+      event.preventDefault();
+      alert('Still setting up the form — please try submitting again in a moment.');
+    }
+  };
   return (
     <section className="section contact" id="contact" data-testid="section-contact">
       <div className="container contact-grid">
