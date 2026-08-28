@@ -350,24 +350,32 @@ function Contact() {
   useEffect(() => {
     const formEl = formRef.current;
     if (!formEl) return;
-    const handleSuccess = () => {
-      setSubmitting(false);
-      setSent(true);
-      setForm({ name: '', email: '', organization: '', message: '' });
+
+    let cancelled = false;
+
+    const init = () => {
+      if (cancelled) return;
+      const PageclipGlobal = (window as any).Pageclip;
+      if (!PageclipGlobal) {
+        setTimeout(init, 150);
+        return;
+      }
+      PageclipGlobal.form(formEl, {
+        onSubmit: () => setSubmitting(true),
+        onResponse: (error: unknown) => {
+          setSubmitting(false);
+          if (error) {
+            alert('Something went wrong sending your message. Please try again or reach out directly via email/socials.');
+          } else {
+            setSent(true);
+            setForm({ name: '', email: '', organization: '', message: '' });
+          }
+        },
+      });
     };
-    const handleError = () => {
-      setSubmitting(false);
-      alert('Something went wrong sending your message. Please try again or reach out directly via email/socials.');
-    };
-    const handleSubmitStart = () => setSubmitting(true);
-    formEl.addEventListener('pageclip:submit', handleSubmitStart);
-    formEl.addEventListener('pageclip:success', handleSuccess);
-    formEl.addEventListener('pageclip:error', handleError);
-    return () => {
-      formEl.removeEventListener('pageclip:submit', handleSubmitStart);
-      formEl.removeEventListener('pageclip:success', handleSuccess);
-      formEl.removeEventListener('pageclip:error', handleError);
-    };
+
+    init();
+    return () => { cancelled = true; };
   }, []);
 
   return (
