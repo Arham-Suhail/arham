@@ -413,7 +413,7 @@ function Contact() {
   <button className="button button-ghost" onClick={() => setSent(false)} data-testid="button-send-another">Send another note <ChevronRight size={14} /></button>
 </div>
             ) : (
-              <form ref={formRef} onSubmit={guardSubmit} action={PAGECLIP_FORM_ACTION} className="pageclip-form" data-testid="form-contact">
+              <form ref={formRef} onSubmit={guardSubmit} method="post" action={PAGECLIP_FORM_ACTION} className="pageclip-form" data-testid="form-contact">
                 <div className="form-field"><label htmlFor="name">Your name</label><input id="name" name="name" value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} placeholder="What should I call you?" required data-testid="input-contact-name" /></div>
                 <div className="form-field"><label htmlFor="email">Your email</label><input id="email" name="email" type="email" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })} placeholder="Where should I reply?" required data-testid="input-contact-email" /></div>
                 <div className="form-field"><label htmlFor="organization">Organization <span>(optional)</span></label><input id="organization" name="organization" value={form.organization} onChange={event => setForm({ ...form, organization: event.target.value })} placeholder="Where are you building from?" data-testid="input-contact-organization" /></div>
