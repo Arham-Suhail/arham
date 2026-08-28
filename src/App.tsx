@@ -345,31 +345,30 @@ function Contact() {
     document.body.appendChild(script);
   }, []);
 
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSubmitting(true);
-    try {
-      const formEl = event.currentTarget;
-      const formData = new FormData(formEl);
-      const response = await fetch(PAGECLIP_FORM_ACTION, {
-        method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: formData,
-      });
-      if (response.ok) {
-        setSent(true);
-        setForm({ name: '', organization: '', message: '', email: '' });
-      } else {
-        console.error('Pageclip submission failed', await response.text());
-        alert('Something went wrong sending your message. Please try again or reach out directly via email/socials.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Something went wrong sending your message. Please try again or reach out directly via email/socials.');
-    } finally {
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const formEl = formRef.current;
+    if (!formEl) return;
+    const handleSuccess = () => {
       setSubmitting(false);
-    }
-  };
+      setSent(true);
+      setForm({ name: '', email: '', organization: '', message: '' });
+    };
+    const handleError = () => {
+      setSubmitting(false);
+      alert('Something went wrong sending your message. Please try again or reach out directly via email/socials.');
+    };
+    const handleSubmitStart = () => setSubmitting(true);
+    formEl.addEventListener('pageclip:submit', handleSubmitStart);
+    formEl.addEventListener('pageclip:success', handleSuccess);
+    formEl.addEventListener('pageclip:error', handleError);
+    return () => {
+      formEl.removeEventListener('pageclip:submit', handleSubmitStart);
+      formEl.removeEventListener('pageclip:success', handleSuccess);
+      formEl.removeEventListener('pageclip:error', handleError);
+    };
+  }, []);
 
   return (
     <section className="section contact" id="contact" data-testid="section-contact">
@@ -388,9 +387,14 @@ function Contact() {
         <Reveal delay="delay-2">
           <div className="contact-form">
             {sent ? (
-              <div className="form-success" data-testid="status-contact-success"><Check size={28} /><h3>Message received.</h3><p>Thanks for reaching out, {form.name || 'friend'}. I'll get back to you within 24 hours.</p><button className="button button-ghost" onClick={() => { setSent(false); setForm({ name: '', organization: '', message: '', email: '' }); }} data-testid="button-send-another">Send another note <ChevronRight size={14} /></button></div>
+             <div className="form-success" data-testid="status-contact-success">
+  <div className="form-success-icon"><Check size={26} /></div>
+  <h3>Message sent.</h3>
+  <p>Thanks for reaching out. I'll get back to you within 24 hours.</p>
+  <button className="button button-ghost" onClick={() => setSent(false)} data-testid="button-send-another">Send another note <ChevronRight size={14} /></button>
+</div>
             ) : (
-              <form onSubmit={submit} action={PAGECLIP_FORM_ACTION} className="pageclip-form" data-testid="form-contact">
+              <form ref={formRef} action={PAGECLIP_FORM_ACTION} className="pageclip-form" data-testid="form-contact">
                 <div className="form-field"><label htmlFor="name">Your name</label><input id="name" name="name" value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} placeholder="What should I call you?" required data-testid="input-contact-name" /></div>
                 <div className="form-field"><label htmlFor="email">Your email</label><input id="email" name="email" type="email" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })} placeholder="Where should I reply?" required data-testid="input-contact-email" /></div>
                 <div className="form-field"><label htmlFor="organization">Organization <span>(optional)</span></label><input id="organization" name="organization" value={form.organization} onChange={event => setForm({ ...form, organization: event.target.value })} placeholder="Where are you building from?" data-testid="input-contact-organization" /></div>
